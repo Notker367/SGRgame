@@ -21,8 +21,11 @@ public class PlayerMove : MonoBehaviour
     public float playerSpeed = 3f;
     private string prewMove;
     private bool touchEnd;
+    private Vector3 StartScale;
+    
 
-    private bool imDown;
+    public bool imHaveDownShift;
+    public bool imHaveUpShift = true;
     public float downTime = 2f;
     //public BoxCollider ForDownCollider;
     void Start()
@@ -30,6 +33,9 @@ public class PlayerMove : MonoBehaviour
     
         player = (GameObject)this.gameObject; 
         playerRun = false;
+        StartScale = player.GetComponent<Transform>().localScale;
+        
+        
 
         
     }
@@ -85,6 +91,7 @@ public class PlayerMove : MonoBehaviour
         if (Input.GetKey(KeyCode.W) || (touchEnd && direction.y > 10))
         {
             Debug.Log("Move_Up");
+            CheckGround();
             //plaerMove_Up();
             MyMove("Jump");
             //direction = new Vector2(direction.x, 0);
@@ -92,6 +99,7 @@ public class PlayerMove : MonoBehaviour
         if (Input.GetKey(KeyCode.S) || (touchEnd && direction.y < -10))
         {
             Debug.Log("Move_Down");
+            CheckGround();
             //plaerMove_Down();
             //direction = new Vector2(0, direction.y);
             MyMove("Down");
@@ -128,12 +136,12 @@ public class PlayerMove : MonoBehaviour
 
         }
 
-
+        
 
     }
     void FixedUpdate() 
     {
-        CheckGround();
+        
         //goTo.transform.position.y = player.transform.position.y;
         /*
         if(imDown)
@@ -163,23 +171,18 @@ public class PlayerMove : MonoBehaviour
 
     void myRoll()
     {
+
         Debug.Log("down true");
-        //ForRunCollider.enabled;
-        //player.GetComponent<BoxCollider>().col = 2f;
-        var boxCollider = gameObject.GetComponent<BoxCollider>();
-        var orig = (boxCollider.center, boxCollider.size);
-        boxCollider.center = new Vector3(0, -0.5f, 0);
-        boxCollider.size = new Vector3(1, 1, 1);
+        imHaveUpShift = false;
 
-        player.transform.rotation = new Quaternion(-90, 0, 0, 0);
+        player.transform.localScale = StartScale - new Vector3(0, 0.5f, 0);
 
-        forDown();
 
-        (boxCollider.center, boxCollider.size) = orig;
+        StartCoroutine("forDown");
+
         //boxCollider.center = ;
         //boxCollider.size = new Vector3(1, 1, 1);
 
-        player.transform.rotation = new Quaternion(0, 0, 0, 0);
         //imDown = false;
     }
 
@@ -187,6 +190,9 @@ public class PlayerMove : MonoBehaviour
     {
         yield return new WaitForSeconds(downTime);
         Debug.Log("wait");
+        player.transform.localScale = StartScale;
+        imHaveUpShift = true;
+        
     }
 
     //private Vector3 goTo = myPosition;
@@ -213,26 +219,32 @@ public class PlayerMove : MonoBehaviour
                     break;
 
                 case "Jump":
-                    if(haveGround)
+                    if(haveGround && imHaveUpShift)
                     {
                         Debug.Log("I jump");
+                        imHaveUpShift = false;
                         player.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpStr, ForceMode.Impulse);
+                        imHaveDownShift = true;
+                        StartCoroutine("JumpCD");
+                        //Invoke(imHaveUpShift = true, 2f);
                         //player.GetComponent<Rigidbody>().velocity = (Vector3.up * jumpStr);
                     }
                     break;
 
                 case "Down":
-                    if(haveGround)
+                    if(haveGround && imHaveUpShift)
                     {
                         Debug.Log("down move");
                         //imDown = true;
-                        //myRoll();
-                        player.transform.rotation = new Quaternion(-90, 0, 0, 0);
+                        myRoll();
+                        
                     }    
-                    else
-                    {
-                        player.GetComponent<Rigidbody>().AddForce(Vector3.down * jumpStr, ForceMode.Impulse);
-                    }   
+                    else 
+                        if(imHaveDownShift)
+                        {
+                            player.GetComponent<Rigidbody>().AddForce(Vector3.down * jumpStr, ForceMode.Impulse);
+                            imHaveDownShift = false;
+                        }     
 
                     break;
 
@@ -260,15 +272,32 @@ public class PlayerMove : MonoBehaviour
             if(hit.rigidbody.tag == "Ground" )
             {
                 haveGround = true;
+                imHaveDownShift = false;
+                //imHaveUpShift = true;
+                StartCoroutine("JumpCD");
             }
         } 
         else 
         {
-            //Debug.Log("not");
+            Debug.Log("not");
             haveGround = false;
         }
 
         
     }
+
+    public IEnumerator JumpCD()
+        {
+            Debug.Log("JumpCdStart");
+            if(!imHaveUpShift)
+            {
+                yield return new WaitForSeconds(1f);
+                imHaveUpShift= true;
+                Debug.Log("JumpCdEnd");
+            }
+
+        } 
+
+    
 
 }
