@@ -34,6 +34,7 @@ public class PlayerMove : MonoBehaviour
         player = (GameObject)this.gameObject; 
         playerRun = false;
         StartScale = player.GetComponent<Transform>().localScale;
+        StartCoroutine("JumpCD");
         
         
 
