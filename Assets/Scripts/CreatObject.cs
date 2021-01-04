@@ -21,7 +21,13 @@ public class CreatObject : MonoBehaviour
             if(crtTime < 8f)
             {
                 int rdmObj = Random.Range(0, objects.Length);
-                Instantiate (objects[rdmObj], this.transform.position, objects[rdmObj].transform.rotation);
+                GameObject creationObj = objects[rdmObj];
+                Instantiate 
+                (
+                    creationObj, 
+                    new Vector3 (this.transform.position.x , creationObj.transform.position.y ,this.transform.position.z), 
+                    creationObj.transform.rotation
+                );
             }
             yield return new WaitForSeconds(crtTime);
         }
